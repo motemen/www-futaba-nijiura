@@ -15,15 +15,15 @@
 ; (sxpath "//small/following-sibling::blockquote")
 ;(define *thread-body-sxpath-query* (compose list-unique (sxpath "//a[.=\"返信\"]/following-sibling::blockquote")))
 ;(define *thread-meta-sxpath-query* (compose list-unique (sxpath "//a[.=\"返信\"]/preceding-sibling::text()[contains(\"/\",.)]")))
-(define *thread-body-sxpath-query* (compose list-unique (sxpath "//small/following-sibling::blockquote/text()")))
+(define *thread-body-sxpath-query* (compose list-unique (sxpath "//small/following-sibling::blockquote")))
 (define *thread-meta-sxpath-query* (compose list-unique (sxpath "//small/preceding-sibling::text()[contains('/', .)]")))
 (define *index-link-query*         (sxpath "//a[.='返信']/@href"))
-(define *response-sxpath-query*    (compose cdr (sxpath '(// (td (@ (equal? (bgcolor "#F0E0D6"))))))))
+(define *response-sxpath-query*    (sxpath '(// (td (@ (equal? (bgcolor "#F0E0D6")))))))
 (export-all)
 
 (define (blockquote->response bq)
   (let ((meta-info-string (string-join ((sxpath '(*text*)) bq)))
-        (body             ((if-car-sxpath '(// blockquote *text*)) bq)))
+        (body             (shtml-tree->string ((sxpath '(// blockquote)) bq))))
     (let ((date   (string->date meta-info-string "~y~m~d~H~M~S"))
           (number ((#/No\.(\d+)/ meta-info-string) 1)))
       `((body   . ,body)
@@ -32,7 +32,7 @@
 
 (define (futaba-thread-url->list url)
   (let1 shtml (url->shtml url)
-    (let ((start-body (car (*thread-body-sxpath-query* shtml)))
+    (let ((start-body (shtml-tree->string (car (*thread-body-sxpath-query* shtml))))
           (start-meta (car (*thread-meta-sxpath-query* shtml)))
           (responses (*response-sxpath-query* shtml)))
       (let ((date   (string->date start-meta "~y~m~d~H~M~S"))
@@ -53,5 +53,16 @@
 (define (list-unique lis . maybe-memq)
   (let1 memq (get-optional maybe-memq memq)
     (reverse (fold (lambda (x xs) (if (memq x xs) xs (cons x xs))) '() lis))))
+
+(define (shtml-tree->string lis)
+  (if (and (list? lis) (not (equal? (car lis) '@)))
+    (string-join
+      (map
+        (lambda (x)
+          (cond ((string? x) x)
+                ((list? x)   (shtml-tree->string x))
+                (else "")))
+        lis))
+    (if (string? lis) lis "")))
 
 (provide "www/futaba")
