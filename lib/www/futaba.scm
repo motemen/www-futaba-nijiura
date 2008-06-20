@@ -12,6 +12,12 @@
 
 (load "htmlprag")
 
+(export-all)
+
+(define (list-unique lis . maybe-memq)
+  (let1 memq (get-optional maybe-memq memq)
+    (reverse (fold (lambda (x xs) (if (memq x xs) xs (cons x xs))) '() lis))))
+
 ; (sxpath "//small/following-sibling::blockquote")
 ;(define *thread-body-sxpath-query* (compose list-unique (sxpath "//a[.=\"返信\"]/following-sibling::blockquote")))
 ;(define *thread-meta-sxpath-query* (compose list-unique (sxpath "//a[.=\"返信\"]/preceding-sibling::text()[contains(\"/\",.)]")))
@@ -19,10 +25,9 @@
 (define *thread-meta-sxpath-query* (compose list-unique (sxpath "//small/preceding-sibling::text()[contains('/', .)]")))
 (define *index-link-query*         (sxpath "//a[.='返信']/@href"))
 (define *response-sxpath-query*    (sxpath '(// (td (@ (equal? (bgcolor "#F0E0D6")))))))
-(export-all)
 
 (define (blockquote->response bq)
-  (let ((meta-info-string (string-join ((sxpath '(*text*)) bq)))
+  (let ((meta-info-string (string-join ((sxpath '(// *text*)) bq)))
         (body             (shtml-tree->string ((sxpath '(// blockquote)) bq))))
     (let ((date   (string->date meta-info-string "~y~m~d~H~M~S"))
           (number ((#/No\.(\d+)/ meta-info-string) 1)))
@@ -49,10 +54,6 @@
   (receive (#f #f host #f path #f #f) (uri-parse url)
     (receive (#f #f content) (http-get host path)
       (html->shtml (ces-convert content "*JP")))))
-
-(define (list-unique lis . maybe-memq)
-  (let1 memq (get-optional maybe-memq memq)
-    (reverse (fold (lambda (x xs) (if (memq x xs) xs (cons x xs))) '() lis))))
 
 (define (shtml-tree->string lis)
   (if (and (list? lis) (not (equal? (car lis) '@)))
