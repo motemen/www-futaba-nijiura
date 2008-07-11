@@ -1,5 +1,6 @@
 (define-module www.futaba
   (use srfi-1)
+  (use srfi-2)
   (use srfi-19)
   (use rfc.uri)
   (use rfc.http)
@@ -8,10 +9,6 @@
   (export
     futaba-thread-url->list))
 (select-module www.futaba)
-(export-all)
-
-(load "htmlprag")
-
 (export-all)
 
 (define (list-unique lis . maybe-memq)
@@ -25,6 +22,34 @@
 (define *thread-meta-sxpath-query* (compose list-unique (sxpath "//small/preceding-sibling::text()[contains('/', .)]")))
 (define *index-link-query*         (sxpath "//a[.='返信']/@href"))
 (define *response-sxpath-query*    (sxpath '(// (td (@ (equal? (bgcolor "#F0E0D6")))))))
+
+(define (parse-thread html)
+  (cons (parse-thread-head html) (parse-thread-response html)))
+
+(define (parse-thread-head html)
+  (and-let* ((m (#/<\/a><input type=checkbox name=\d+ value=delete>([^ ]+) No\.(\d+) <small>[^<]+<\/small>\n<blockquote>([^<]*)<\/blockquote>/ html))
+             (date (string->date (m 1) "~y~m~d~H~M~S"))
+             (no   (m 2))
+             (body (m 3)))
+    `((body   . ,body)
+      (date   . ,date)
+      (number . ,no))
+  ))
+  
+(define (parse-thread-response html)
+  (filter-map
+    (lambda (line)
+      (and-let* ((m (#/^<input type=checkbox.*?>(.*?) No.(\d+) <blockquote>(.*)<\/blockquote>/ line))
+                 (date (string->date (m 1) "~y~m~d~H~M~S"))
+                 (no   (m 2))
+                 (body (regexp-replace-all* (m 3)
+                                            #/<br>/ "\n"
+                                            #/<.*?>/ "")))
+        `((body   . ,body)
+          (date   . ,date)
+          (number . ,no))
+        ))
+    (string-split html #/[\r\n]/)))
 
 (define (blockquote->response bq)
   (let ((meta-info-string (string-join ((sxpath '(// *text*)) bq)))
@@ -50,10 +75,10 @@
       )))
 
 ;;; Utilities
-(define (url->shtml url)
+(define (url->string url)
   (receive (#f #f host #f path #f #f) (uri-parse url)
-    (receive (#f #f content) (http-get host path)
-      (html->shtml (ces-convert content "*JP")))))
+    (receive (#f #f html) (http-get host path)
+      (ces-convert html "*JP"))))
 
 (define (shtml-tree->string lis)
   (if (and (list? lis) (not (equal? (car lis) '@)))
