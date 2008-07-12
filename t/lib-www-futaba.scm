@@ -1,14 +1,18 @@
 #!/usr/local/bin/gosh
 (use file.util)
 (use util.list)
+(use gauche.charconv)
 (use gauche.test)
-(load "www/futaba")
-(import www.futaba)
+
+(use www.futaba)
 
 (test-module 'www.futaba)
 
 (test-section "thread")
-(define thread (parse-thread (file->string "t/html/img-thread.html")))
+(define thread (parse-thread (call-with-input-file
+                               "t/html/img-thread.html"
+                               port->string
+                               :encoding "cp932")))
 
 (test* "parse-thread length"
        50
