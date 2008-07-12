@@ -17,13 +17,18 @@
 
 (test-section "index")
 (define index (futaba-parse-index (load-assets-html "img-index")))
+
 (test* "index length"
        10
        (length index))
 
-(test* "index head"
+(test* "index head body"
        "腐女子の思考が理解できない"
        (assoc-ref (car index) 'body))
+
+(test* "index #2 path"
+       "res/36234303.htm"
+       (assoc-ref (list-ref index 2) 'path))
 
 (test-section "thread")
 (define thread (futaba-parse-thread (load-assets-html "img-thread")))
