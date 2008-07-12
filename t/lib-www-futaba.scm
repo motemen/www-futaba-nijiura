@@ -8,6 +8,19 @@
 
 (test-module 'www.futaba)
 
+(test-section "index")
+(define index (parse-index (call-with-input-file
+                             "t/html/img-index.html"
+                             port->string
+                             :encoding "cp932")))
+(test* "parse-index length"
+       10
+       (length index))
+
+(test* "parse-index head"
+       "腐女子の思考が理解できない"
+       (assoc-ref (car index) 'body))
+
 (test-section "thread")
 (define thread (parse-thread (call-with-input-file
                                "t/html/img-thread.html"

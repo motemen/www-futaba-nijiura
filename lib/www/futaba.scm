@@ -7,6 +7,7 @@
   (use sxml.sxpath)
   (use gauche.charconv)
   (export
+    parse-index
     parse-thread))
 (select-module www.futaba)
 
@@ -21,6 +22,24 @@
 ;(define *thread-meta-sxpath-query* (compose list-unique (sxpath "//small/preceding-sibling::text()[contains('/', .)]")))
 ;(define *index-link-query*         (sxpath "//a[.='返信']/@href"))
 ;(define *response-sxpath-query*    (sxpath '(// (td (@ (equal? (bgcolor "#F0E0D6")))))))
+
+(define (parse-index html)
+  (let1 thread-heads '()
+    (regexp-replace-all
+      #/<\/a><input type=checkbox name=\d+ value=delete>(?:<[^>]+>)?([^ ]+)(?:<[^>]+>)? No\.(\d+) <small>[^<]+<\/small>\[<a href=([^>]+)>返信<\/a>\]\n<blockquote>(.*?) <\/blockquote>/
+      html
+      (lambda (m)
+        (push!
+          thread-heads
+          (let ((date (string->date (m 1) "~y~m~d~H~M~S"))
+                (no   (m 2))
+                (path (m 3))
+                (body (html-string->plain (m 4))))
+            `((body   . ,body)
+              (date   . ,date)
+              (number . ,no)
+              (path   . ,path))))))
+    (reverse! thread-heads)))
 
 (define (parse-thread html)
   (cons (parse-thread-head html) (parse-thread-response html)))
@@ -85,10 +104,10 @@
 
 (define (html-unescape-string string)
   (regexp-replace-all* string
-                       #/&lt;/   "<"
-                       #/&gt;/   ">"
-                       #/&quot;/ "\""
-                       #/&amp;/  "&"))
+                       #/&lt\;/   "<"
+                       #/&gt\;/   ">"
+                       #/&quot\;/ "\""
+                       #/&amp\;/  "&"))
 
 ;(define (shtml-tree->string lis)
 ;  (if (and (list? lis) (not (equal? (car lis) '@)))
