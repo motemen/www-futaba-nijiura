@@ -6,35 +6,36 @@
 
 (use www.futaba)
 
+(define (load-assets-html filename)
+  (call-with-input-file
+    #`"t/html/,|filename|.html"
+    port->string
+    :encoding "cp932"))
+  
+(test-section "module")
 (test-module 'www.futaba)
 
 (test-section "index")
-(define index (parse-index (call-with-input-file
-                             "t/html/img-index.html"
-                             port->string
-                             :encoding "cp932")))
-(test* "parse-index length"
+(define index (futaba-parse-index (load-assets-html "img-index")))
+(test* "index length"
        10
        (length index))
 
-(test* "parse-index head"
+(test* "index head"
        "腐女子の思考が理解できない"
        (assoc-ref (car index) 'body))
 
 (test-section "thread")
-(define thread (parse-thread (call-with-input-file
-                               "t/html/img-thread.html"
-                               port->string
-                               :encoding "cp932")))
+(define thread (futaba-parse-thread (load-assets-html "img-thread")))
 
-(test* "parse-thread length"
+(test* "thread length"
        50
        (length thread))
 
-(test* "parse-thread head body"
+(test* "thread head body"
        "統一感が全くないデザインもいいな！"
        (assoc-ref (car thread) 'body))
 
-(test* "parse-thread #10 body"
+(test* "thread #10 body"
        ">統一感が全くないデザインもいいな！\nしかも姚天君以外は\n初登場時のシルエットと姿が全然違う！"
        (assoc-ref (list-ref thread 10) 'body))
