@@ -1,10 +1,7 @@
 #!/usr/local/bin/gosh
-(use file.util)
 (use util.list)
 (use gauche.charconv)
 (use gauche.test)
-
-(use www.futaba)
 
 (define (load-assets-html filename)
   (call-with-input-file
@@ -12,6 +9,9 @@
     port->string
     :encoding "cp932"))
   
+(test-start "www.futaba")
+(use www.futaba)
+
 (test-section "module")
 (test-module 'www.futaba)
 
@@ -44,3 +44,5 @@
 (test* "thread #10 body"
        ">統一感が全くないデザインもいいな！\nしかも姚天君以外は\n初登場時のシルエットと姿が全然違う！"
        (assoc-ref (list-ref thread 10) 'body))
+
+(test-end)

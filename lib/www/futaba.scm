@@ -6,6 +6,8 @@
   (use rfc.http)
   (use gauche.charconv)
   (export
+    futaba-url-type
+    futaba-url->list
     futaba-parse-index
     futaba-parse-thread))
 (select-module www.futaba)
@@ -17,6 +19,33 @@
 (define *regexp-thread-response*
   #/^<input type=checkbox.*?>(?<date>.*?) No.(?<no>\d+) <blockquote>(?<body>.*?) <\/blockquote>/)
 
+(define (futaba-url-type url)
+  (rxmatch-cond
+    ((#/^http:\/\/(\w+)\.2chan.net\/b\/$/ url)
+       (#f server)
+     `(index ,server))
+    ((#/^http:\/\/(\w+)\.2chan.net\/b\/res\/(\d+).htm$/ url)
+       (#f server no)
+     `(thread ,server ,no))
+    (else
+      #f)))
+
+(define (futaba-url->list url)
+  (or
+    (and-let* ((url-type (futaba-url-type url))
+               (url-type (car url-type)))
+      (receive (content status) (url->string url)
+        (values
+          (cond
+            ((eq? url-type 'index)
+             (futaba-parse-index content))
+            ((eq? url-type 'thread)
+             (futaba-parse-thread content))
+            (else #f))
+          url-type
+          status)))
+    (values #f #f #f)))
+
 (define (futaba-parse-index html)
   (let loop ((html html) (thread-heads '()))
     (or (and-let* ((m (*regexp-index-threads* html)))
@@ -24,7 +53,9 @@
         (reverse! thread-heads))))
 
 (define (futaba-parse-thread html)
-  (cons (futaba-parse-thread-head html) (futaba-parse-thread-response html)))
+  (and-let* ((head (futaba-parse-thread-head html))
+             (tail (futaba-parse-thread-response html)))
+    (cons head tail)))
 
 (define (futaba-parse-thread-head html)
   (cond ((*regexp-thread-head* html) => match->response-info)
@@ -45,8 +76,10 @@
 
 (define (url->string url)
   (receive (#f #f host #f path #f #f) (uri-parse url)
-    (receive (#f #f html) (http-get host path)
-      (ces-convert html "*JP"))))
+    (receive (status #f content) (http-get host path)
+      (values
+        (ces-convert content "*JP")
+        status))))
 
 (define (html-string->plain html-string)
   (html-unescape-string
