@@ -1,4 +1,4 @@
-(define-module www.nijiura
+(define-module www.futaba.nijiura
   (use srfi-1)
   (use srfi-2)
   (use srfi-19)
@@ -10,7 +10,7 @@
     nijiura-url->list
     nijiura-parse-index
     nijiura-parse-thread))
-(select-module www.nijiura)
+(select-module www.futaba.nijiura)
 
 (define *regexp-index-threads*
   #/<\/a><input type=checkbox name=\d+ value=delete>(?:<[^>]+>)?(?<date>[^ ]+)(?:<[^>]+>)? No\.(?<no>\d+) <small>[^<]+<\/small>\[<a href=(?<path>[^>]+)>返信<\/a>\]\n<blockquote>(?<body>.*?) <\/blockquote>/)
@@ -94,4 +94,4 @@
                        #/&quot\;/ "\""
                        #/&amp\;/  "&"))
 
-(provide "www/nijiura")
+(provide "www/futaba/nijiura")
