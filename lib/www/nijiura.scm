@@ -1,4 +1,4 @@
-(define-module www.futaba
+(define-module www.nijiura
   (use srfi-1)
   (use srfi-2)
   (use srfi-19)
@@ -6,11 +6,11 @@
   (use rfc.http)
   (use gauche.charconv)
   (export
-    futaba-url-type
-    futaba-url->list
-    futaba-parse-index
-    futaba-parse-thread))
-(select-module www.futaba)
+    nijiura-url-type
+    nijiura-url->list
+    nijiura-parse-index
+    nijiura-parse-thread))
+(select-module www.nijiura)
 
 (define *regexp-index-threads*
   #/<\/a><input type=checkbox name=\d+ value=delete>(?:<[^>]+>)?(?<date>[^ ]+)(?:<[^>]+>)? No\.(?<no>\d+) <small>[^<]+<\/small>\[<a href=(?<path>[^>]+)>返信<\/a>\]\n<blockquote>(?<body>.*?) <\/blockquote>/)
@@ -19,7 +19,7 @@
 (define *regexp-thread-response*
   #/^<input type=checkbox.*?>(?<date>.*?) No.(?<no>\d+) <blockquote>(?<body>.*?) <\/blockquote>/)
 
-(define (futaba-url-type url)
+(define (nijiura-url-type url)
   (rxmatch-cond
     ((#/^http:\/\/(\w+)\.2chan.net\/b\/$/ url)
        (#f server)
@@ -30,38 +30,38 @@
     (else
       #f)))
 
-(define (futaba-url->list url)
+(define (nijiura-url->list url)
   (or
-    (and-let* ((url-type (futaba-url-type url))
+    (and-let* ((url-type (nijiura-url-type url))
                (url-type (car url-type)))
       (receive (content status) (url->string url)
         (values
           (cond
             ((eq? url-type 'index)
-             (futaba-parse-index content))
+             (nijiura-parse-index content))
             ((eq? url-type 'thread)
-             (futaba-parse-thread content))
+             (nijiura-parse-thread content))
             (else #f))
           url-type
           status)))
     (values #f #f #f)))
 
-(define (futaba-parse-index html)
+(define (nijiura-parse-index html)
   (let loop ((html html) (thread-heads '()))
     (or (and-let* ((m (*regexp-index-threads* html)))
           (loop (m 'after) (cons (match->response-info m) thread-heads)))
         (reverse! thread-heads))))
 
-(define (futaba-parse-thread html)
-  (and-let* ((head (futaba-parse-thread-head html))
-             (tail (futaba-parse-thread-response html)))
+(define (nijiura-parse-thread html)
+  (and-let* ((head (nijiura-parse-thread-head html))
+             (tail (nijiura-parse-thread-response html)))
     (cons head tail)))
 
-(define (futaba-parse-thread-head html)
+(define (nijiura-parse-thread-head html)
   (cond ((*regexp-thread-head* html) => match->response-info)
         (else #f)))
   
-(define (futaba-parse-thread-response html)
+(define (nijiura-parse-thread-response html)
   (filter-map
     (lambda (line)
       (cond ((*regexp-thread-response* line) => match->response-info)
@@ -94,4 +94,4 @@
                        #/&quot\;/ "\""
                        #/&amp\;/  "&"))
 
-(provide "www/futaba")
+(provide "www/nijiura")

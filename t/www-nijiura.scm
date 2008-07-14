@@ -9,14 +9,14 @@
     port->string
     :encoding "cp932"))
   
-(test-start "www.futaba")
-(use www.futaba)
+(test-start "www.nijiura")
+(use www.nijiura)
 
 (test-section "module")
-(test-module 'www.futaba)
+(test-module 'www.nijiura)
 
 (test-section "index")
-(define index (futaba-parse-index (load-assets-html "img-index")))
+(define index (nijiura-parse-index (load-assets-html "img-index")))
 
 (test* "index length"
        10
@@ -31,7 +31,7 @@
        (assoc-ref (list-ref index 2) 'path))
 
 (test-section "thread")
-(define thread (futaba-parse-thread (load-assets-html "img-thread")))
+(define thread (nijiura-parse-thread (load-assets-html "img-thread")))
 
 (test* "thread length"
        50
