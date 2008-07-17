@@ -13,11 +13,11 @@
 (select-module www.futaba.nijiura)
 
 (define *regexp-index-threads*
-  #/<\/a><input type=checkbox name=\d+ value=delete>(?:<[^>]+>)?(?<date>[^ ]+)(?:<[^>]+>)? No\.(?<no>\d+) <small>[^<]+<\/small>\[<a href=(?<path>[^>]+)>返信<\/a>\]\n<blockquote>(?<body>.*?) <\/blockquote>/)
+  #/<\/a><input type=checkbox name=\d+ value=delete>(?:<a href="mailto:(?<mail>[^\"]+)"">)?(?:<[^>]+>)?(?<date>[^ ]+)(?:<[^>]+>)? No\.(?<no>\d+) <small>[^<]+<\/small>\[<a href=(?<path>[^>]+)>返信<\/a>\]\n<blockquote>(?<body>.*?) <\/blockquote>/)
 (define *regexp-thread-head*
-  #/<\/a><input type=checkbox name=\d+ value=delete>(?<date>[^ ]+) No\.(?<no>\d+) <small>[^<]+<\/small>\n<blockquote>(?<body>.*?) <\/blockquote>/)
+  #/<\/a><input type=checkbox name=\d+ value=delete>(?:<a href="mailto:(?<mail>[^\"]+)"">)?(?<date>[^ ]+) No\.(?<no>\d+) <small>[^<]+<\/small>\n<blockquote>(?<body>.*?) <\/blockquote>/)
 (define *regexp-thread-response*
-  #/^<input type=checkbox.*?>(?<date>.*?) No.(?<no>\d+) <blockquote>(?<body>.*?) <\/blockquote>/)
+  #/^<input type=checkbox.*?>(?:<a href="mailto:(?<mail>[^\"]+)"">)?(?<date>.*?) No.(?<no>\d+) <blockquote>(?<body>.*?) <\/blockquote>/)
 
 (define (nijiura-url-type url)
   (rxmatch-cond
@@ -72,6 +72,7 @@
   `((date . ,(string->date (m 'date) "~y~m~d~H~M~S"))
     (no   . ,(m 'no))
     (body . ,(html-string->plain (m 'body)))
+    (mail . ,(m 'mail))
     ,@(guard (e (else '())) `((path . ,(m 'path))))))
 
 (define (url->string url)

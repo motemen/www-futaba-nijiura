@@ -9,11 +9,11 @@
     port->string
     :encoding "cp932"))
   
-(test-start "www.nijiura")
-(use www.nijiura)
+(test-start "www.futaba.nijiura")
+(use www.futaba.nijiura)
 
 (test-section "module")
-(test-module 'www.nijiura)
+(test-module 'www.futaba.nijiura)
 
 (test-section "index")
 (define index (nijiura-parse-index (load-assets-html "img-index")))
@@ -30,6 +30,10 @@
        "res/36234303.htm"
        (assoc-ref (list-ref index 2) 'path))
 
+(test* "index #8 mail"
+       "（ ・3・）？"
+       (assoc-ref (list-ref index 8) 'mail))
+
 (test-section "thread")
 (define thread (nijiura-parse-thread (load-assets-html "img-thread")))
 
@@ -44,5 +48,9 @@
 (test* "thread #10 body"
        ">統一感が全くないデザインもいいな！\nしかも姚天君以外は\n初登場時のシルエットと姿が全然違う！"
        (assoc-ref (list-ref thread 10) 'body))
+
+(test* "thread #28 mail"
+       "No.36234988"
+       (assoc-ref (list-ref thread 28) 'mail))
 
 (test-end)
