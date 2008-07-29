@@ -7,6 +7,7 @@
   (use gauche.charconv)
   (export
     nijiura-get
+    nijiura-url-type
     nijiura-parse-index
     nijiura-parse-thread))
 (select-module www.futaba.nijiura)
