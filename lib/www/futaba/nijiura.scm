@@ -6,8 +6,7 @@
   (use rfc.http)
   (use gauche.charconv)
   (export
-    nijiura-url-type
-    nijiura-url->list
+    nijiura-get
     nijiura-parse-index
     nijiura-parse-thread))
 (select-module www.futaba.nijiura)
@@ -30,7 +29,7 @@
     (else
       #f)))
 
-(define (nijiura-url->list url)
+(define (nijiura-get url)
   (or
     (and-let* ((url-type (nijiura-url-type url))
                (url-type (car url-type)))
